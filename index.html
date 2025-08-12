@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sao băng - Kieu Oanh & Anh Bang</title>
 <style>
     body {
@@ -28,7 +29,7 @@ let meteors = [];
 let backgroundStars = [];
 let clouds = [];
 
-// Tạo nền sao tĩnh
+// Nền sao tĩnh
 function createBackgroundStars(count) {
     backgroundStars = [];
     for (let i = 0; i < count; i++) {
@@ -41,7 +42,7 @@ function createBackgroundStars(count) {
     }
 }
 
-// Tạo hiệu ứng mây mờ
+// Mây mờ
 function createClouds(count) {
     clouds = [];
     for (let i = 0; i < count; i++) {
@@ -70,7 +71,7 @@ function drawClouds() {
     });
 }
 
-// Tạo sao từ chữ nhiều dòng
+// Sao chữ
 function createStarsFromText(line1, line2) {
     stars = [];
     let tempCanvas = document.createElement("canvas");
@@ -103,7 +104,7 @@ function createStarsFromText(line1, line2) {
     }
 }
 
-// Tạo sao băng
+// Sao băng
 function createMeteor() {
     return {
         x: Math.random() * W,
@@ -117,7 +118,6 @@ function createMeteor() {
 
 function drawBackgroundStars() {
     ctx.save();
-    ctx.globalAlpha = 0.8;
     ctx.fillStyle = "white";
     backgroundStars.forEach(s => {
         ctx.globalAlpha = 0.4 + 0.6 * Math.sin(Date.now() / 1000 + s.alpha * 10);
@@ -168,13 +168,14 @@ function drawMeteors() {
         }
     });
 
-    if (Math.random() < 0.1) { // sao băng xuất hiện nhiều hơn
+    if (Math.random() < 0.1) {
         meteors.push(createMeteor());
     }
 }
 
+// Animation loop
 function animate() {
-    ctx.fillStyle = "rgba(0,0,20,0.2)";
+    ctx.fillStyle = "rgba(0,0,20,0.3)";
     ctx.fillRect(0, 0, W, H);
     drawBackgroundStars();
     drawClouds();
