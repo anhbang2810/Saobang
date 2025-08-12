@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Sao băng - Kieu Oanh</title>
+    <title>Sao băng - Kieu Oanh & Anh Bang</title>
     <style>
         body {
             margin: 0;
@@ -24,11 +24,16 @@ let W = canvas.width = window.innerWidth;
 let H = canvas.height = window.innerHeight;
 
 let stars = [];
+let movingTextStars = [];
 let meteors = [];
 let backgroundStars = [];
+let clouds = [];
+let movingOffset = 0;
+let movingDirection = 1;
 
-// Tạo nền sao tĩnh
+// Nền sao tĩnh
 function createBackgroundStars(count) {
+    backgroundStars = [];
     for (let i = 0; i < count; i++) {
         backgroundStars.push({
             x: Math.random() * W,
@@ -39,9 +44,38 @@ function createBackgroundStars(count) {
     }
 }
 
-// Tạo sao từ chữ
-function createStarsFromText(text) {
-    stars = [];
+// Mây mờ
+function createClouds(count) {
+    clouds = [];
+    for (let i = 0; i < count; i++) {
+        clouds.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 80 + 50,
+            alpha: Math.random() * 0.1 + 0.05,
+            speed: Math.random() * 0.3 + 0.05
+        });
+    }
+}
+
+function drawClouds() {
+    clouds.forEach(cloud => {
+        let grad = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.r);
+        grad.addColorStop(0, `rgba(255,255,255,${cloud.alpha})`);
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cloud.x, cloud.y, cloud.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        cloud.x += cloud.speed;
+        if (cloud.x - cloud.r > W) cloud.x = -cloud.r;
+    });
+}
+
+// Chữ sao tĩnh
+function createStarsFromText(text, yPos, targetArray) {
+    targetArray.length = 0;
     let tempCanvas = document.createElement("canvas");
     let tempCtx = tempCanvas.getContext("2d");
     tempCanvas.width = W;
@@ -50,14 +84,14 @@ function createStarsFromText(text) {
     tempCtx.font = "bold 150px Arial";
     tempCtx.textAlign = "center";
     tempCtx.textBaseline = "middle";
-    tempCtx.fillText(text, W/2, H/2);
+    tempCtx.fillText(text, W/2, yPos);
 
     let imageData = tempCtx.getImageData(0, 0, W, H).data;
     for (let y = 0; y < H; y += 3) {
         for (let x = 0; x < W; x += 3) {
             let index = (y * W + x) * 4;
             if (imageData[index + 3] > 128) {
-                stars.push({
+                targetArray.push({
                     x: x,
                     y: y,
                     size: Math.random() * 1.5 + 0.5,
@@ -68,7 +102,7 @@ function createStarsFromText(text) {
     }
 }
 
-// Tạo sao băng với đuôi gradient
+// Sao băng
 function createMeteor() {
     return {
         x: Math.random() * W,
@@ -82,7 +116,6 @@ function createMeteor() {
 
 function drawBackgroundStars() {
     ctx.save();
-    ctx.globalAlpha = 0.8;
     ctx.fillStyle = "white";
     backgroundStars.forEach(s => {
         ctx.globalAlpha = 0.4 + 0.6 * Math.sin(Date.now() / 1000 + s.alpha * 10);
@@ -93,13 +126,13 @@ function drawBackgroundStars() {
     ctx.restore();
 }
 
-function drawTextStars() {
-    stars.forEach(s => {
+function drawTextStars(starArray, offsetX = 0) {
+    starArray.forEach(s => {
         let twinkle = 0.5 + 0.5 * Math.sin(Date.now() / 500 + s.phase);
         ctx.globalAlpha = twinkle;
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.arc(s.x + offsetX, s.y, s.size, 0, Math.PI * 2);
         ctx.fill();
     });
     ctx.globalAlpha = 1;
@@ -119,7 +152,6 @@ function drawMeteors() {
         ctx.lineTo(x2, y2);
         ctx.stroke();
 
-        // Đầu sao băng sáng
         ctx.beginPath();
         ctx.fillStyle = `rgba(255,255,255,${m.alpha})`;
         ctx.arc(m.x, m.y, 2.5, 0, Math.PI * 2);
@@ -134,30 +166,37 @@ function drawMeteors() {
         }
     });
 
-    if (Math.random() < 0.04) {
-        meteors.push(createMeteor());
-    }
+    if (Math.random() < 0.05) meteors.push(createMeteor());
 }
 
 function animate() {
     ctx.fillStyle = "rgba(0,0,20,0.2)";
     ctx.fillRect(0, 0, W, H);
     drawBackgroundStars();
-    drawTextStars();
+    drawClouds();
+    drawTextStars(stars); // chữ Kieu Oanh
+    drawTextStars(movingTextStars, movingOffset); // chữ Anh Bang chạy ngang
     drawMeteors();
+
+    movingOffset += movingDirection * 1.5;
+    if (movingOffset > 50 || movingOffset < -50) movingDirection *= -1;
+
     requestAnimationFrame(animate);
 }
 
-createBackgroundStars(150);
-createStarsFromText("Kieu Oanh");
+createBackgroundStars(200);
+createClouds(20);
+createStarsFromText("Kieu Oanh", H/2 - 100, stars);
+createStarsFromText("Anh Bang", H/2 + 120, movingTextStars);
 animate();
 
 window.addEventListener("resize", () => {
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
-    backgroundStars = [];
-    createBackgroundStars(150);
-    createStarsFromText("Kieu Oanh");
+    createBackgroundStars(200);
+    createClouds(20);
+    createStarsFromText("Kieu Oanh", H/2 - 100, stars);
+    createStarsFromText("Anh Bang", H/2 + 120, movingTextStars);
 });
 </script>
 </body>
